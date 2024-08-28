@@ -1,0 +1,86 @@
+openapi: 3.0.0
+info:
+  title: Events API
+  description: API for managing events
+  version: 1.0.0
+servers:
+  - url: https://void.stud.vts.su.ac.rs
+paths:
+  /events_api.php:
+    get:
+      summary: Retrieve events
+      description: Get a list of events
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: ID of the user whose events to retrieve
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter events by status
+      responses:
+        '200':
+          description: A list of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    event_id:
+                      type: integer
+                    name:
+                      type: string
+                    date:
+                      type: string
+                      format: date-time
+                    location:
+                      type: string
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+    post:
+      summary: Create an event
+      description: Create a new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                date:
+                  type: string
+                  format: date-time
+                location:
+                  type: string
+      responses:
+        '201':
+          description: Event created successfully
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        event_id:
+          type: integer
+        name:
+          type: string
+        date:
+          type: string
+          format: date-time
+        location:
+          type: string

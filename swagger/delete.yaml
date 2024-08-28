@@ -1,0 +1,64 @@
+openapi: 3.0.3
+info:
+  title: Event Management API
+  description: API for managing events, including deleting events.
+  version: 1.0.0
+servers:
+  - url: https://void.stud.vts.su.ac.rs
+paths:
+  /delete_event_api.php:
+    post:
+      summary: Delete an Event
+      description: Deletes an event by its ID.
+      operationId: deleteEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The ID of the event to delete.
+                  example: '123'
+      responses:
+        '200':
+          description: Successfully deleted the event.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Event successfully deleted.
+        '400':
+          description: Bad Request. Event ID is required or invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Event ID is required.
+        '405':
+          description: Method Not Allowed. Only POST method is allowed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid request method.

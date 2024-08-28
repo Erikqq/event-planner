@@ -1,0 +1,81 @@
+openapi: 3.0.3
+info:
+  title: Event Management API
+  description: API for managing events, including creating new events.
+  version: 1.0.0
+servers:
+  - url: https://void.stud.vts.su.ac.rs
+paths:
+  /create_event_api.php:
+    post:
+      summary: Create an Event
+      description: Creates a new event with the provided details.
+      operationId: createEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the event.
+                  example: 'Annual Meeting'
+                event_date:
+                  type: string
+                  format: date-time
+                  description: The date and time of the event.
+                  example: '2024-09-15T10:00:00Z'
+                place:
+                  type: string
+                  description: The location of the event.
+                  example: 'Conference Room 1'
+                type:
+                  type: string
+                  description: The type/category of the event.
+                  example: 'Meeting'
+                comment:
+                  type: string
+                  description: Additional comments about the event.
+                  example: 'Please bring your reports.'
+      responses:
+        '201':
+          description: Successfully created the event.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Event successfully created.
+        '400':
+          description: Bad Request. Missing or invalid parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Missing or invalid parameters.
+        '405':
+          description: Method Not Allowed. Only POST method is allowed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid request method.

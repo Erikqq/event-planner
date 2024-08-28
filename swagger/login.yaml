@@ -1,0 +1,88 @@
+openapi: 3.0.0
+info:
+  title: Login API
+  description: API for user login and session management
+  version: 1.0.0
+servers:
+  - url: https://void.stud.vts.su.ac.rs
+paths:
+  /login:
+    post:
+      summary: User Login
+      description: Authenticate a user and start a session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: user123
+                password:
+                  type: string
+                  example: password123
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Login successful.
+        '400':
+          description: Bad request (Invalid request method or missing parameters)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid request method.
+        '401':
+          description: Unauthorized (Invalid username or password)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid username or password.
+        '403':
+          description: Forbidden (Account is banned or email is not verified)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Your account is banned.
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
