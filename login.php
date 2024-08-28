@@ -8,14 +8,10 @@
 <body>
 <?php
 require("db_config.php");
-
-require_once "device_report.php"; 
-$user_agent = $_SERVER['HTTP_USER_AGENT'];
-$device_repo = new DeviceRepository($user_agent);
+// Abszolút elérési út
+require_once __DIR__ . "/device_report.php";
 
 session_start();
-
-
 
 // Guest login
 if (isset($_POST['submit_guest'])) {
@@ -23,10 +19,9 @@ if (isset($_POST['submit_guest'])) {
     header("Location: dashboard.php");
     exit();
 }
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
+$user_agent = $_SERVER['HTTP_USER_AGENT'];
+$device_repo = new DeviceRepository($user_agent);
 
 function collectdata($con, $device_repo, $username) {
     // Retrieve data from the DeviceRepository
@@ -65,9 +60,8 @@ if (isset($_POST['username'])) {
     $password = stripslashes($_REQUEST['password']);
     $password = mysqli_real_escape_string($con, $password);
 
-    $query = "SELECT * FROM `users` WHERE username='$username'
-              AND password='" . md5($password) . "'";
-    $result = mysqli_query($con, $query) or die(mysql_error());
+    $query = "SELECT * FROM `users` WHERE username='$username' AND password='" . md5($password) . "'";
+    $result = mysqli_query($con, $query) or die(mysqli_error($con));
     $rows = mysqli_num_rows($result);
 
     if ($rows == 1) {
@@ -77,6 +71,11 @@ if (isset($_POST['username'])) {
             echo "<div class='form'>
                   <h3>A fiókod tiltva van.</h3><br/>
                   <p class='link'>Kattints ide az ismételt <a href='login.php'>bejelentkezéshez</a>.</p>
+                  </div>";
+        } elseif ($userData['email_verified'] == 0) {
+            echo "<div class='form'>
+                  <h3>Az e-mail cím még nem lett megerősítve.</h3><br/>
+                  <p class='link'>Kérjük, ellenőrizd az e-mail fiókodat és erősítsd meg az e-mail címedet.</p>
                   </div>";
         } else {
             $_SESSION['username'] = $username;
@@ -91,7 +90,7 @@ if (isset($_POST['username'])) {
               </div>";
     }
 } else {
-    ?>
+?>
     <form class="form" method="post" name="login">
         <h1 class="login-title">Bejelentkezés</h1>
         <input type="text" class="login-input" name="username" placeholder="Felhasználónév" autofocus="true"/>
@@ -99,10 +98,10 @@ if (isset($_POST['username'])) {
         <input type="submit" value="Bejelentkezés" name="submit" class="login-button"/><br><br>
         <input type="submit" value="Vendégként belépés" name="submit_guest" class="login-button"/>
         <p class="link">Még nincs felhasználód? <a href="registration.php">Regisztrálj most!</a></p>
-
-  </form>
+        <p class="link"><a href="forgot_password.php">Elfelejtett jelszó</a></p>
+    </form>
 <?php
-    }
+}
 ?>
 </body>
 </html>

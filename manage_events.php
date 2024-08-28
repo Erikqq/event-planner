@@ -196,6 +196,51 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 </div>    
 
+<!-- Form for blocking an event -->
+<h2>Esemény betiltása</h2>
+<form method="POST" action="block_event.php">
+    <div class="form-group">
+        <label for="block_event_id">Esemény ID:</label>
+        <input type="text" id="block_event_id" name="event_id" required>
+    </div>
+    <button type="submit" name="block_event">Betiltás</button>
+</form>
+
+<!-- Form for unblocking an event -->
+<h2>Esemény engedélyezése</h2>
+<form method="POST" action="unblock_event.php">
+    <div class="form-group">
+        <label for="unblock_event_id">Esemény ID:</label>
+        <input type="text" id="unblock_event_id" name="event_id" required>
+    </div>
+    <button type="submit" name="unblock_event">Engedélyezés</button>
+</form>
+
+<!-- List of blocked events -->
+<h2>Betiltott események</h2>
+<?php
+$query = "SELECT * FROM blocked_events";
+$result = mysqli_query($con, $query);
+
+if (!$result) {
+    die("Query failed: " . mysqli_error($con));
+}
+
+$blocked_events = [];
+while ($row = mysqli_fetch_assoc($result)) {
+    $blocked_events[] = $row;
+}
+
+if (empty($blocked_events)) {
+    echo "<p>Nincsenek betiltott események.</p>";
+} else {
+    echo "<ul>";
+    foreach ($blocked_events as $event) {
+        echo "<li>ID: {$event['id']}, Név: {$event['name']}, Időpont: {$event['event_date']}, Helyszín: {$event['place']}</li>";
+    }
+    echo "</ul>";
+}
+?>
 
 </body>
 </html>

@@ -1,37 +1,24 @@
 <?php
-session_start();
-require 'db_config.php';  // Csatlakozás az adatbázishoz
-require 'auth_session.php';
+require('db_config.php');
+require("auth_session.php");
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $event_id = $_POST['event_id'];
-    $invitee_name = $_POST['invitee_name'];
-    $bring_item = $_POST['bring_item'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $eventId = $_POST['event_id'];
+    $inviteeName = mysqli_real_escape_string($con, $_POST['invitee_name']);
+    $bringItem = mysqli_real_escape_string($con, $_POST['bring_item']);
 
-    // Ellenőrizzük, hogy létezik-e a meghívott felhasználó
-    $userQuery = "SELECT id FROM users WHERE username = '$invitee_name'";
-    $userResult = mysqli_query($con, $userQuery);
+    $query = "INSERT INTO invitations (event_id, invitee_name, bring_item) 
+              VALUES ('$eventId', '$inviteeName', '$bringItem')";
 
-    if (mysqli_num_rows($userResult) > 0) {
-        $userData = mysqli_fetch_assoc($userResult);
-        $invitee_id = $userData['id'];
-
-        // Meghívás elmentése az adatbázisba
-        $inviteQuery = "INSERT INTO event_invitations (event_id, user_id, bring_item) VALUES ('$event_id', '$invitee_id', '$bring_item')";
-        $inviteResult = mysqli_query($con, $inviteQuery);
-
-        if ($inviteResult) {
-            $message = "Meghívás sikeresen elküldve.";
-        } else {
-            $message = "Hiba történt a meghívás elküldésekor.";
-        }
+    if (mysqli_query($con, $query)) {
+        echo "Meghívó sikeresen elküldve.";
+        // Redirect back to the events page or wherever you want
+        header("Location: profile.php");
+        exit();
     } else {
-        $message = "A megadott felhasználónév nem található.";
+        echo "Hiba történt a meghívás során: " . mysqli_error($con);
     }
-
-    // Visszairányítás egy üzenettel
-    $_SESSION['message'] = $message;
-    header("Location: profile.php");  // Visszairányítás az események oldalára
-    exit();
+} else {
+    echo "Helytelen kérés.";
 }
 ?>

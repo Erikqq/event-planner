@@ -42,7 +42,7 @@ if (mysqli_num_rows($eventsResult) > 0) {
         mysqli_query($con, $insertPastEventQuery);
 
         // Meghívások áthelyezése a 'past_event_invitations' táblába
-        $invitationsQuery = "SELECT * FROM event_invitations WHERE event_id = '$eventId'";
+        $invitationsQuery = "SELECT * FROM invitations WHERE event_id = '$eventId'";
         $invitationsResult = mysqli_query($con, $invitationsQuery);
 
         while ($invitation = mysqli_fetch_assoc($invitationsResult)) {
@@ -60,7 +60,7 @@ if (mysqli_num_rows($eventsResult) > 0) {
         mysqli_query($con, $deleteEventQuery);
 
         // Törlés az 'event_invitations' táblából
-        $deleteInvitationsQuery = "DELETE FROM event_invitations WHERE event_id = '$eventId'";
+        $deleteInvitationsQuery = "DELETE FROM invitations WHERE event_id = '$eventId'";
         mysqli_query($con, $deleteInvitationsQuery);
     }
 }
@@ -187,7 +187,6 @@ if (mysqli_num_rows($adminResult) == 1) {
     <h2>Eseményeid listája</h2>
 
     <?php
-
     $username = $_SESSION['username'];
 
     // Események lekérdezése az adott felhasználóhoz
@@ -196,7 +195,6 @@ if (mysqli_num_rows($adminResult) == 1) {
 
     // Ha van találat
     if (mysqli_num_rows($eventsResult) > 0) {
-
         while ($row = mysqli_fetch_assoc($eventsResult)) {
             $eventId = $row['id'];
             $name = $row['name'];
@@ -215,6 +213,11 @@ if (mysqli_num_rows($adminResult) == 1) {
             echo "        <span class='label'>Típus:</span> $type<br>";
             echo "        <span class='label'>Megjegyzés:</span> $comment<br>";
             echo "    </div>";
+
+            echo "    <form action='delete_event.php' method='POST' onsubmit='return confirm(\"Biztosan törölni szeretnéd ezt az eseményt?\");'>";
+            echo "        <input type='hidden' name='delete-event-id' value='$eventId'>";
+            echo "        <button type='submit' name='delete-event'>Törlés</button>";
+            echo "    </form>";
 
             // Meghívás gomb
             echo "    <button onclick='showInvitePanel($eventId)'>Meghívás</button>";
@@ -246,21 +249,15 @@ if (mysqli_num_rows($adminResult) == 1) {
             echo "            <button type='button' onclick='hideArchivePanel($eventId)'>Bezárás</button>";
 
             // Archívum lekérdezése
-            $archiveQuery = "SELECT * FROM event_invitations WHERE event_id = $eventId";
+            $archiveQuery = "SELECT * FROM invitations WHERE event_id = $eventId";
             $archiveResult = mysqli_query($con, $archiveQuery);
 
             if (mysqli_num_rows($archiveResult) > 0) {
                 while ($invite = mysqli_fetch_assoc($archiveResult)) {
                     $inviteId = $invite['id'];
-                    $inviteeId = $invite['user_id'];
+                    $inviteeName = $invite['invitee_name'];
                     $bringItem = $invite['bring_item'];
                     $status = $invite['status'];
-
-                    // Lekérdezzük a felhasználó nevét
-                    $userQuery = "SELECT username FROM users WHERE id = $inviteeId";
-                    $userResult = mysqli_query($con, $userQuery);
-                    $userData = mysqli_fetch_assoc($userResult);
-                    $inviteeName = $userData['username'];
 
                     echo "<div class='invite-item'>";
                     echo "    <span class='label'>Meghívott neve:</span> $inviteeName<br>";
@@ -268,7 +265,7 @@ if (mysqli_num_rows($adminResult) == 1) {
                     echo "    <span class='label'>Állapot:</span> $status<br>";
 
                     // Csak a "Még nem válaszolt" státuszúak törölhetők
-                    if ($status === 'Még nem válaszolt') {
+                    if ($status === 'Pending') {
                         echo "    <form action='delete_invite.php' method='POST' style='display:inline;'>";
                         echo "        <input type='hidden' name='invite_id' value='$inviteId'>";
                         echo "        <button type='submit'>Törlés</button>";
@@ -310,151 +307,7 @@ if (mysqli_num_rows($adminResult) == 1) {
     </script>
 </div>
 
-export default function CreateEvent() {
-  const [name, setName] = useState('');
-  const [eventDate, setEventDate] = useState('');
-  const [place, setPlace] = useState('');
-  const [type, setType] = useState('');
-
-  const handleCreateEvent = async () => {
-    try {
-      const response = await fetch('https://void.stud.vts.su.ac.rs/event.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          name: name,
-          event_date: eventDate,
-          place: place,
-          type: type,
-        }),
-      });
-      const result = await response.json();
-      console.log('Event created:', result);
-    } catch (error) {
-      console.error('Error creating event:', error);
-    }
-  };
-
-
-
-<div class="container">
-    <h2>Esemény törlése</h2>
-    <form action="delete-event.php" method="POST">
-        <div class="form-group">
-            <label for="delete-event-id">Esemény ID:</label>
-            <input type="text" id="delete-event-id" name="delete-event-id" required>
-        </div>
-        <button type="submit" name="delete-event">Törlés</button>
-    </form>
-</div>
-
-<div class="container">
-    <h2>Meghívások kezelése</h2>
-
-    <?php
-    // Feltételezzük, hogy a felhasználó be van jelentkezve
-    $username = $_SESSION['username'];
-
-    // Meghívások lekérdezése a felhasználóhoz
-    $invitationsQuery = "
-        SELECT ei.id AS invite_id, e.name AS event_name, e.event_date, e.place, e.type, e.comment, ei.bring_item, ei.status
-        FROM event_invitations ei
-        JOIN events e ON ei.event_id = e.id
-        JOIN users u ON ei.user_id = u.id
-        WHERE u.username = '$username'
-    ";
-    $invitationsResult = mysqli_query($con, $invitationsQuery);
-
-    // Visszajelzett meghívások listája
-    echo "<h3>Visszajelzett meghívások</h3>";
-    echo "<div class='responses-list'>";
-    $responsesQuery = "
-        SELECT ei.id AS invite_id, e.name AS event_name, e.event_date, e.place, e.type, e.comment, ei.bring_item, ei.status
-        FROM event_invitations ei
-        JOIN events e ON ei.event_id = e.id
-        JOIN users u ON ei.user_id = u.id
-        WHERE u.username = '$username' AND ei.status != 'Még nem válaszolt'
-        ORDER BY ei.event_id
-    ";
-    $responsesResult = mysqli_query($con, $responsesQuery);
-
-    if (mysqli_num_rows($responsesResult) > 0) {
-        while ($row = mysqli_fetch_assoc($responsesResult)) {
-            $inviteId = $row['invite_id'];
-            $eventName = $row['event_name'];
-            $eventDate = $row['event_date'];
-            $place = $row['place'];
-            $type = $row['type'];
-            $comment = $row['comment'];
-            $bringItem = $row['bring_item'];
-            $status = $row['status'];
-
-            echo "<div class='invitation-item'>";
-            echo "    <h4>$eventName</h4>";
-            echo "    <p><strong>Időpont:</strong> $eventDate</p>";
-            echo "    <p><strong>Helyszín:</strong> $place</p>";
-            echo "    <p><strong>Megjegyzés:</strong> $comment</p>";
-            echo "    <p><strong>Hoznia kell:</strong> $bringItem</p>";
-            echo "    <p><strong>Állapot:</strong> $status</p>";
-            echo "</div>";
-        }
-    } else {
-        echo "<p>Nincsenek visszajelzett meghívások.</p>";
-    }
-    echo "</div>";
-
-    // Aktuális meghívások, ahol a státusz "Még nem válaszolt"
-    echo "<h3>Aktuális meghívások</h3>";
-    echo "<div class='invitations-list'>";
-    $currentInvitationsQuery = "
-        SELECT ei.id AS invite_id, e.name AS event_name, e.event_date, e.place, e.type, e.comment, ei.bring_item, ei.status
-        FROM event_invitations ei
-        JOIN events e ON ei.event_id = e.id
-        JOIN users u ON ei.user_id = u.id
-        WHERE u.username = '$username' AND ei.status = 'Még nem válaszolt'
-    ";
-    $currentInvitationsResult = mysqli_query($con, $currentInvitationsQuery);
-
-    if (mysqli_num_rows($currentInvitationsResult) > 0) {
-        while ($row = mysqli_fetch_assoc($currentInvitationsResult)) {
-            $inviteId = $row['invite_id'];
-            $eventName = $row['event_name'];
-            $eventDate = $row['event_date'];
-            $place = $row['place'];
-            $type = $row['type'];
-            $comment = $row['comment'];
-            $bringItem = $row['bring_item'];
-            $status = $row['status'];
-
-            echo "<div class='invitation-item'>";
-            echo "    <h4>$eventName</h4>";
-            echo "    <p><strong>Időpont:</strong> $eventDate</p>";
-            echo "    <p><strong>Helyszín:</strong> $place</p>";
-            echo "    <p><strong>Megjegyzés:</strong> $comment</p>";
-            echo "    <p><strong>Hoznia kell:</strong> $bringItem</p>";
-
-            // Válasz státusz frissítése
-            echo "    <form action='update_status.php' method='POST' class='response-form'>";
-            echo "        <input type='hidden' name='invite_id' value='$inviteId'>";
-            echo "        <select name='status' required>";
-            echo "            <option value='Jön' " . ($status === 'Jön' ? 'selected' : '') . ">Jön</option>";
-            echo "            <option value='Nem jön' " . ($status === 'Nem jön' ? 'selected' : '') . ">Nem jön</option>";
-            echo "            <option value='Talán jön' " . ($status === 'Talán jön' ? 'selected' : '') . ">Talán jön</option>";
-            echo "        </select>";
-            echo "        <button type='submit'>Válasz küldése</button>";
-            echo "    </form>";
-
-            echo "</div>";
-        }
-    } else {
-        echo "<p>Nincsenek aktuális meghívások.</p>";
-    }
-    echo "</div>";
-    ?>
-</div>
-
+  
 
 
 

@@ -6,7 +6,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $invite_id = $_POST['invite_id'];
     $status = $_POST['status'];
 
-    $updateQuery = "UPDATE event_invitations SET status = '$status' WHERE id = '$invite_id'";
+    $updateQuery = "UPDATE invitations SET status = '$status' WHERE id = '$invite_id'";
     $updateResult = mysqli_query($con, $updateQuery);
 
     if ($updateResult) {
@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $_SESSION['message'] = $message;
-    header("Location: profile.php");
+    header("Location: events.php");
     exit();
 }
 ?>

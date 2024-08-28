@@ -5,7 +5,7 @@ require 'db_config.php';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $invite_id = $_POST['invite_id'];
 
-    $deleteQuery = "DELETE FROM event_invitations WHERE id = '$invite_id'";
+    $deleteQuery = "DELETE FROM invitations WHERE id = '$invite_id'";
     $deleteResult = mysqli_query($con, $deleteQuery);
 
     if ($deleteResult) {
